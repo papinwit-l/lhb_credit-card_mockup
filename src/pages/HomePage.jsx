@@ -1,5 +1,5 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,15 +13,19 @@ import {
   TrendingUp,
   Award,
   Zap,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 // Import card images
 import platinumCardImg from "@/assets/platinum-card.png";
 import infiniteCardImg from "@/assets/infinite-card.png";
 import titaniumCardImg from "@/assets/titanium-card.png";
+import CollapsibleCard from "@/components/CollapsibleCard";
 
 export function HomePage() {
   const navigate = useNavigate();
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   const features = [
     {
@@ -89,6 +93,25 @@ export function HomePage() {
       bgGradient: "from-[#6d4c7d] to-[#8b3f92]",
     },
   ];
+
+  // Auto-rotate cards every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCardIndex((prev) => (prev + 1) % creditCards.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [creditCards.length]);
+
+  const nextCard = () => {
+    setCurrentCardIndex((prev) => (prev + 1) % creditCards.length);
+  };
+
+  const prevCard = () => {
+    setCurrentCardIndex(
+      (prev) => (prev - 1 + creditCards.length) % creditCards.length
+    );
+  };
 
   return (
     <div className="min-h-screen">
@@ -164,7 +187,7 @@ export function HomePage() {
               </div>
             </motion.div>
 
-            {/* Right Content - Featured Card */}
+            {/* Right Content - Card Slider */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -172,27 +195,269 @@ export function HomePage() {
               className="relative"
             >
               <div className="relative">
-                {/* Floating card effect */}
-                <motion.div
-                  animate={{ y: [0, -20, 0] }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className="relative z-10"
-                >
-                  <img
-                    src={titaniumCardImg}
-                    alt="LH Bank Credit Card"
-                    className="w-full max-w-lg mx-auto drop-shadow-2xl"
-                  />
-                </motion.div>
+                {/* Card Slider */}
+                <div className="relative h-[400px] flex items-center justify-center">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentCardIndex}
+                      initial={{ opacity: 0, x: 100, rotateY: -30 }}
+                      animate={{ opacity: 1, x: 0, rotateY: 0 }}
+                      exit={{ opacity: 0, x: -100, rotateY: 30 }}
+                      transition={{ duration: 0.5 }}
+                      className="relative z-10"
+                    >
+                      <motion.div
+                        animate={{ y: [0, -20, 0] }}
+                        transition={{
+                          duration: 4,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <img
+                          src={creditCards[currentCardIndex].image}
+                          alt={`LH Bank ${creditCards[currentCardIndex].name}`}
+                          className="w-full max-w-lg mx-auto drop-shadow-2xl"
+                        />
+                      </motion.div>
+                    </motion.div>
+                  </AnimatePresence>
+
+                  {/* Navigation Buttons */}
+                  <button
+                    onClick={prevCard}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all hover:scale-110"
+                    aria-label="Previous card"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-[#8b3f92]" />
+                  </button>
+                  <button
+                    onClick={nextCard}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white rounded-full p-3 shadow-lg transition-all hover:scale-110"
+                    aria-label="Next card"
+                  >
+                    <ChevronRight className="w-6 h-6 text-[#8b3f92]" />
+                  </button>
+                </div>
+
+                {/* Dots Indicator */}
+                <div className="flex justify-center gap-2 mt-16">
+                  {creditCards.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentCardIndex(index)}
+                      className={`h-2 rounded-full transition-all ${
+                        index === currentCardIndex
+                          ? "w-8 bg-white"
+                          : "w-2 bg-white/40 hover:bg-white/60"
+                      }`}
+                      aria-label={`Go to card ${index + 1}`}
+                    />
+                  ))}
+                </div>
 
                 {/* Decorative elements */}
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#ced629] rounded-full blur-3xl opacity-30"></div>
                 <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#0080be] rounded-full blur-3xl opacity-30"></div>
               </div>
+            </motion.div>
+          </div>
+
+          {/* Informative Section - Below Card Slider */}
+          <div className="mt-20 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="space-y-6"
+            >
+              <CollapsibleCard title="Eligibility Requirements">
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#8b3f92] mt-2 flex-shrink-0"></div>
+                    <p className="text-gray-700">
+                      Must be at least 20 years old with Thai nationality or
+                      valid work permit
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#8b3f92] mt-2 flex-shrink-0"></div>
+                    <p className="text-gray-700">
+                      Minimum monthly income of ฿15,000 (varies by card type)
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#8b3f92] mt-2 flex-shrink-0"></div>
+                    <p className="text-gray-700">
+                      Valid government-issued ID and proof of income required
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#8b3f92] mt-2 flex-shrink-0"></div>
+                    <p className="text-gray-700">
+                      Good credit history with no outstanding defaults
+                    </p>
+                  </div>
+                </div>
+              </CollapsibleCard>
+
+              <CollapsibleCard title="Current Promotions">
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-[#8b3f92]/10 to-transparent p-4 rounded-xl border-l-4 border-[#8b3f92]">
+                    <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <span>🛍️</span> Shopping
+                    </h4>
+                    <p className="text-gray-700 text-sm mb-2">
+                      Earn 5X points at department stores, fashion outlets, and
+                      online shopping platforms
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-xs bg-[#8b3f92]/20 text-[#8b3f92] px-2 py-1 rounded-full font-medium">
+                        Up to 10% cashback
+                      </span>
+                      <span className="text-xs bg-[#8b3f92]/20 text-[#8b3f92] px-2 py-1 rounded-full font-medium">
+                        Special weekend deals
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-[#47b9c0]/10 to-transparent p-4 rounded-xl border-l-4 border-[#47b9c0]">
+                    <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <span>🍽️</span> Restaurant
+                    </h4>
+                    <p className="text-gray-700 text-sm mb-2">
+                      Enjoy 20% discount at over 1,000 partner restaurants
+                      nationwide including fine dining and casual eateries
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-xs bg-[#47b9c0]/20 text-[#47b9c0] px-2 py-1 rounded-full font-medium">
+                        1-for-1 dining offers
+                      </span>
+                      <span className="text-xs bg-[#47b9c0]/20 text-[#47b9c0] px-2 py-1 rounded-full font-medium">
+                        Complimentary dessert
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-[#0080be]/10 to-transparent p-4 rounded-xl border-l-4 border-[#0080be]">
+                    <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <span>🏨</span> Hotel & Resort
+                    </h4>
+                    <p className="text-gray-700 text-sm mb-2">
+                      Get exclusive rates up to 40% off on luxury hotels and
+                      resorts worldwide with room upgrades and late check-out
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-xs bg-[#0080be]/20 text-[#0080be] px-2 py-1 rounded-full font-medium">
+                        Free breakfast
+                      </span>
+                      <span className="text-xs bg-[#0080be]/20 text-[#0080be] px-2 py-1 rounded-full font-medium">
+                        Spa credits included
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-[#ced629]/10 to-transparent p-4 rounded-xl border-l-4 border-[#ced629]">
+                    <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+                      <span>✈️</span> Flight Ticket
+                    </h4>
+                    <p className="text-gray-700 text-sm mb-2">
+                      Save up to 15% on flights with partner airlines plus
+                      complimentary airport lounge access and priority boarding
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-xs bg-[#ced629]/20 text-[#ced629] px-2 py-1 rounded-full font-medium">
+                        Extra baggage allowance
+                      </span>
+                      <span className="text-xs bg-[#ced629]/20 text-[#ced629] px-2 py-1 rounded-full font-medium">
+                        Travel insurance
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CollapsibleCard>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="space-y-6"
+            >
+              <CollapsibleCard title="Interest Rates & Fees">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Annual Fee</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        ฿0 - ฿5,000
+                      </p>
+                      <p className="text-xs text-gray-500">First year waived</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">
+                        Interest Rate
+                      </p>
+                      <p className="text-lg font-bold text-gray-900">
+                        18% p.a.
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        On retail purchases
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Cash Advance</p>
+                      <p className="text-lg font-bold text-gray-900">
+                        20% p.a.
+                      </p>
+                      <p className="text-xs text-gray-500">Plus 3% fee</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Late Payment</p>
+                      <p className="text-lg font-bold text-gray-900">฿300</p>
+                      <p className="text-xs text-gray-500">Per occurrence</p>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-gray-200">
+                    <p className="text-xs text-gray-500">
+                      *Terms and conditions apply. Rates subject to change.
+                    </p>
+                  </div>
+                </div>
+              </CollapsibleCard>
+
+              <CollapsibleCard title="Frequently Asked Questions">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      How long does approval take?
+                    </h4>
+                    <p className="text-gray-700 text-sm">
+                      Most applications are approved within 5 minutes. You'll
+                      receive your card within 7-10 business days.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Can I change my credit limit?
+                    </h4>
+                    <p className="text-gray-700 text-sm">
+                      Yes, you can request a credit limit increase after 6
+                      months of good payment history through our mobile app or
+                      customer service.
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      What rewards can I earn?
+                    </h4>
+                    <p className="text-gray-700 text-sm">
+                      Earn points on every purchase that can be redeemed for
+                      cashback, travel, merchandise, or statement credits.
+                    </p>
+                  </div>
+                </div>
+              </CollapsibleCard>
             </motion.div>
           </div>
         </div>
